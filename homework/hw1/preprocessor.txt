@@ -1,0 +1,10 @@
+#define Blair Awesome!
+#include "preprocessor2.txt"
+#ifdef Blair
+	Blair
+#else 
+	Not Awesome! 
+#endif
+
+
+Blair Marshall
