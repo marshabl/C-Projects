@@ -64,5 +64,7 @@ int main(int argc, char ** args)
                         printf(" (%d)\n", letters[i]);
                 }
         }
+	
+	fclose(fi);
 	return EXIT_SUCCESS; 
 }
