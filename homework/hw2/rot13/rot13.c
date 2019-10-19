@@ -10,30 +10,27 @@ int rot13(int input, int a, int z)
   	return rotInput;
 }
 
-int main(int argc, char * argv[])
+int main(int argc, char ** args)
 {
-	FILE *fi = fopen("rot13-in.txt", "r");	// open files
-  	FILE *fo = fopen("rot13-out.txt", "w");
+	FILE *fi = fopen(args[1], "r");	// open file
 
-  char c;
-  while ((c=fgetc(fi))!=EOF)	//look at each letter and apply rot13 otherwise leave it alone
-  {
-  	if(c >= 'a' && c <= 'z')
-    	{
-      		putchar(rot13(c, 'a', 'z'));
-        }
-    	else if(c >= 'A' && c <= 'Z')
-    	{
-      		putchar(rot13(c, 'A', 'Z'));
-      
-    	}
-    	else
-    	{
-      		putchar(c);
-       	}
-  }
-  fclose(fi);	//close files
-  fclose(fo);
+  	char c;
+  	while ((c=fgetc(fi))!=EOF)	//look at each letter and apply rot13 otherwise leave it alone
+  	{
+  		if(c >= 'a' && c <= 'z')
+    		{
+      			putchar(rot13(c, 'a', 'z'));
+        	}
+    		else if(c >= 'A' && c <= 'Z')
+    		{
+      			putchar(rot13(c, 'A', 'Z'));
+    		}
+    		else
+    		{
+      			putchar(c);
+       		}
+  	}
+  	fclose(fi);	//close file
 
-  return EXIT_SUCCESS;
+  	return EXIT_SUCCESS;
 }
