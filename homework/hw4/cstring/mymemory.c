@@ -23,25 +23,22 @@ char * mystrdup(const char * mystr)
 
 char ** add_word(char ** array, unsigned int wordcount, const char * word_to_add)
 {
-	char ** newarray;
-	const char * copyword = mystrdup(word_to_add);
+	char * copyword = mystrdup(word_to_add);
 	
 	wordcount = 0;
-	if (array)
+	for (unsigned int i=0; array[i] != '\0'; ++i)
 	{
-		for (unsigned int i=0;array[i]; ++i)
-        	{	
-                	++wordcount;
-        	}
-		newarray = realloc(array, wordcount + 1);
+		wordcount = i;
 	}
-	else
+	
+	char ** newarray = malloc(wordcount + 1);
+	for (unsigned int i=0; array[i] != '\0'; ++i)
 	{
-		newarray = malloc(wordcount + 1);
+		newarray[i] = array[i];	
 	}
 
         newarray[wordcount] = copyword;
         newarray[wordcount + 1] = '\0';
+
 	return newarray;
-	
 }

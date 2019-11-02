@@ -11,12 +11,13 @@ int main()
         printf("%s\n", copystr);
         free(copystr);
 
-	char ** wordarray;
+	char * myarr[3] = {"Blair", "was", "here"};
 	unsigned int wordcount;
-	char ** newarray = add_word(wordarray, wordcount, mystr);
 
-	printf("%s\n", newarray[0]);
-	free(copystr);	
+	char ** newarray = add_word(myarr, wordcount, mystr);
+
+	printf("%s\n", newarray[3]);
+	free(newarray);	
  
         return EXIT_SUCCESS;
 }
