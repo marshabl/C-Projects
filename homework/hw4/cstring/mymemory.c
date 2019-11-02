@@ -11,34 +11,36 @@
 
 char * mystrdup(const char * mystr)
 {
-	unsigned int length  = strlen(mystr);
-	char* ptr = malloc(length + 1);
-	for (unsigned int i=0; i<length; ++i)
+	unsigned int len = strlen(mystr);
+	char* ptr = malloc((len+1)*sizeof(mystr));
+	for (unsigned int i=0; i<len; ++i)
 	{
 		ptr[i] = mystr[i];
 	}
-	ptr[length] = '\0';	
+	ptr[len] = '\0';	
 	return ptr;
 }
 
 char ** add_word(char ** array, unsigned int wordcount, const char * word_to_add)
 {
 	char * copyword = mystrdup(word_to_add);
+
+	unsigned int len = sizeof(array) / sizeof(char);
 	
 	wordcount = 0;
-	for (unsigned int i=0; array[i] != '\0'; ++i)
+	for (unsigned int i=0; i < len; ++i)
 	{
 		wordcount = i;
 	}
 	
-	char ** newarray = malloc(wordcount + 1);
-	for (unsigned int i=0; array[i] != '\0'; ++i)
+	char ** newarray = malloc((wordcount+1)*sizeof(array));
+	for (unsigned int i=0; i < wordcount; ++i)
 	{
 		newarray[i] = array[i];	
 	}
 
         newarray[wordcount] = copyword;
-        newarray[wordcount + 1] = '\0';
+        //newarray[wordcount + 1] = '\0';
 
 	return newarray;
 }
