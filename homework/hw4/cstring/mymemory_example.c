@@ -7,17 +7,13 @@ int main()
 {
         char * mystr = "blair";
         char * copystr = mystrdup(mystr);
-
-        printf("%s\n", copystr);
         free(copystr);
 
-	char * myarr[3] = {"Blair", "was", "here"};
-	unsigned int wordcount;
+	char ** arr = malloc(sizeof(char*));
+	char ** newarray = add_word(arr, 0, mystr);
 
-	char ** newarray = add_word(myarr, wordcount, mystr);
-
-	printf("%s\n", newarray[3]);
-	free(newarray);	
+	print_word_array(newarray, 1);
+	free_word_array(newarray, 1);	
  
         return EXIT_SUCCESS;
 }
