@@ -5,9 +5,15 @@
 
 int main (int argc, char ** args)
 {
+	// if user does not enter 2 or 3 arguments in the command line, end program
+        if (argc < 3 || argc > 4)
+        {
+                puts("Please add correct command line arguments!");
+                return EXIT_FAILURE;
+        }
+
 	// open files for key and text to encode/decode
 	FILE *k = fopen(args[1], "r");
-	FILE *e = fopen(args[2], "r");
 	
 	// open file key_used.txt to store encoding used
 	FILE *ko = fopen("key_used.txt", "w");
@@ -15,18 +21,11 @@ int main (int argc, char ** args)
 	char c;
 	
 	// initialize regular alphabet and encoded array alphabet
-	const char decode[26] = "abcdefghijklmnopqrstuvwxyz";
+	const char decode[27] = "abcdefghijklmnopqrstuvwxyz\0";
 	char encode[strlen(decode)];
 
 	int i = 0;
 	int check = 0;
-
-	// if user does not enter 2 or 3 arguments in the command line, end program
-	if (argc < 3 || argc > 4)
-        {
-                puts("Please add correct command line arguments!");
-                return EXIT_FAILURE;
-        }
 	
 	// generate the key to encode and decode files and store it in file key_used.txt
 	while ((c=fgetc(k))!=EOF)
@@ -62,6 +61,7 @@ int main (int argc, char ** args)
 	// if 2 arguments, (key text, and text to be encoded), encode the 3rd argument using key text
 	if (argc == 3)
         {
+		FILE *e = fopen(args[2], "r");
 		int upper = 0;
                 
                 while ((c=fgetc(e))!=EOF)
@@ -88,12 +88,14 @@ int main (int argc, char ** args)
 			}
 			
 		}
+		fclose(e);
 		return EXIT_SUCCESS;
         }
 
 	// if 3 arguments, (+ extra throwaway argument), decode the 3rd argument
         if (argc == 4)
         {
+		FILE *e = fopen(args[2], "r");
 		int upper = 0;
 
 		while ((c=fgetc(e))!=EOF)
@@ -121,9 +123,10 @@ int main (int argc, char ** args)
                                 putchar(c);
                         }	
 		}
+		fclose(e);
+		return EXIT_SUCCESS;
         }
 	
-	fclose(e);
 	fclose(k);
 	fclose(ko);
 	
