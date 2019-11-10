@@ -153,7 +153,6 @@ mnist_dataset_handle mnist_open (const char * name)
 	/****************************READ IN DATA + LABELS*******************************/
 	//initialize new empty dataset with above height and width
 	mnist_dataset_handle h =  mnist_create(width, height);	
-	h->imagecount = num_of_items;
 	
 	//set start parameters
 	mnist_image_handle imh = mnist_image_begin(h);
@@ -169,6 +168,7 @@ mnist_dataset_handle mnist_open (const char * name)
 		newlabel = 0;
                 fread(&newlabel, sizeof(unsigned char), 1, labelset);	
 		mnist_set_image_label(imh, newlabel);
+		
 		free(imagedata);
         }
 
@@ -262,6 +262,8 @@ mnist_image_handle mnist_image_add_after (mnist_dataset_handle dataset, mnist_im
 		imh->prev_image = h;
 		h->next_image = imh;
 	}
+
+	++dataset->imagecount;
 
 	return imh;
 }
