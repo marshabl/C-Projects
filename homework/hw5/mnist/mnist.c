@@ -44,7 +44,6 @@ void mnist_free (mnist_dataset_handle handle)
 {
 	if (handle->start != NULL)
 	{
-		struct mnist_image_t mnist_image_t;
 		mnist_image_handle imh = handle->start;
 		mnist_image_handle next = NULL;
 		
@@ -88,8 +87,8 @@ mnist_dataset_handle mnist_open (const char * name)
 {
 	char dsfilename[255];
 	char lsfilename[255];
-	snprintf(dsfilename, sizeof(dsfilename), "%s-images-idx3-ubyte", name);
-	snprintf(lsfilename, sizeof(lsfilename), "%s-labels-idx1-ubyte", name);
+	snprintf(dsfilename, sizeof(dsfilename)-1, "%s-images-idx3-ubyte", name);
+	snprintf(lsfilename, sizeof(lsfilename)-1, "%s-labels-idx1-ubyte", name);
 	
 	//initialize standard width variables
 	uint32_t magic_number;
@@ -158,17 +157,19 @@ mnist_dataset_handle mnist_open (const char * name)
 	
 	//set start parameters
 	mnist_image_handle imh = mnist_image_begin(h);
-	const unsigned char * imagedata;
+	unsigned char * imagedata;
 	unsigned int newlabel;
 	//read in data
         for (int i=0; i < num_of_items; ++i)
-        {		
+        {
+		imagedata = malloc((height*width*sizeof(unsigned char)));
 		imh = mnist_image_add_after(h, imh, imagedata, width, height); 
 		fread(imh->imagedata, sizeof(unsigned char), height*width, dataset);
 		newlabel = mnist_image_label(imh);
 		newlabel = 0;
                 fread(&newlabel, sizeof(unsigned char), 1, labelset);	
 		mnist_set_image_label(imh, newlabel);
+		free(imagedata);
         }
 
 	fclose(dataset);
@@ -301,14 +302,76 @@ mnist_image_handle mnist_image_remove(mnist_dataset_handle dataset, mnist_image_
 				return next;
                 	}
        		} 
-	}		
+	}
+	return EXIT_SUCCESS;		
 }
 
 bool mnist_save(const_mnist_dataset_handle h, const char * filename)
 {
+   	if (!h)
+   	{
+      		fprintf (stderr, "Couldn't open dataset '%s'!\n", filename);
+      		return 1;
+   	}
+
+   	const unsigned int imagecount = mnist_image_count (h);
+   	unsigned int width, height;
+   	mnist_image_size (h, &width, &height);
+
+	char dsfilename[255];
+        char lsfilename[255];
+  
+	mnist_image_handle img = h->start;
+   	for (unsigned int i=0; i<imagecount; ++i)
+   	{
+      		if (!img)
+      		{
+         		fprintf (stderr, "Not enough images in dataset!\n");
+         		return 1;
+      		}
+
+		snprintf (dsfilename, sizeof(dsfilename)-1, "%s-%05u-data.pgm", filename, i);
+		snprintf (lsfilename, sizeof(lsfilename)-1, "%s-%05u-label.pgm", filename, i);
+
+      		FILE * f = fopen (filename, "w");
+		FILE * fl = fopen (filename, "w");
+      		if (!f || !fl)
+      		{
+         		perror ("Couldn't write to file: ");
+         		return 1;
+      		}
+
+      		printf ("Writing %s...\n", filename);
+
+      		fputs ("P2\n", f);
+      		fprintf (f, "# %s %u/%u\n", filename, i, imagecount);
+      		fprintf (f, "%u %u\n", width, height);
+      		fputs ("255\n", f);
+
+      		const unsigned char * data = mnist_image_data (img);
+		int lbl =  mnist_image_label(img);
+
+      		for (unsigned int y=0; y<height; ++y)
+      		{
+         		for (unsigned int x=0; x<width; ++x)
+         		{
+            			unsigned int c = *data;
+            			fprintf (f, "%u ", c);
+            			++data;
+         		}
+         		fputs ("\n", f);
+      		}
+
+		fprintf(fl, "%d ", lbl);
+		fclose (fl);
+      		fclose (f);
+
+      		img = mnist_image_next (img);
+   	}
+
+   	exit(EXIT_SUCCESS);
 	
 }
-
 
 
 
