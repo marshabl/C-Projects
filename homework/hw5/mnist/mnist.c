@@ -363,9 +363,6 @@ bool mnist_save(const_mnist_dataset_handle h, const char * filename)
 
 	char dsfilename[255];
         char lsfilename[255];
-	
-	//snprintf (dsfilename, sizeof(dsfilename)-1, "%s-%05u-data.pgm", filename, i);
-        //snprintf (lsfilename, sizeof(lsfilename)-1, "%s-%05u-label.pgm", filename, i);
   
 	mnist_image_handle img = h->start;
 
@@ -374,15 +371,6 @@ bool mnist_save(const_mnist_dataset_handle h, const char * filename)
         	fprintf (stderr, "Not enough images in dataset!\n");
                 return 1;
         }
-
-        //FILE * f = fopen (dsfilename, "w");
-        //FILE * fl = fopen (lsfilename, "w");
-
-        //if (!f || !fl)
-        //{
-          //      perror ("Couldn't write to file: ");
-            //    return 1;
-        //}
 
    	for (unsigned int i=0; i<imagecount; ++i)
    	{
@@ -425,8 +413,6 @@ bool mnist_save(const_mnist_dataset_handle h, const char * filename)
         	fclose (f);
       		img = mnist_image_next (img);
    	}
-	//fclose (fl);
-        //fclose (f);
 
    	exit(EXIT_SUCCESS);
 	
