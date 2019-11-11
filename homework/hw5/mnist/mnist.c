@@ -4,6 +4,7 @@
 #include <string.h>
 #include <arpa/inet.h>
 #include <stdint.h>
+#include <time.h>
 
 struct mnist_dataset_t
 {
@@ -162,19 +163,60 @@ mnist_dataset_handle mnist_open (const char * name)
         for (int i=0; i < num_of_items; ++i)
         {
 		imagedata = malloc((height*width*sizeof(unsigned char)));
+		fread(imagedata, sizeof(unsigned char), height*width, dataset);
 		imh = mnist_image_add_after(h, imh, imagedata, width, height); 
-		fread(imh->imagedata, sizeof(unsigned char), height*width, dataset);
 		newlabel = mnist_image_label(imh);
 		newlabel = 0;
                 fread(&newlabel, sizeof(unsigned char), 1, labelset);	
 		mnist_set_image_label(imh, newlabel);
-		
-		free(imagedata);
         }
 
 	fclose(dataset);
 	fclose(labelset);
 	return h;
+}
+
+mnist_dataset_handle mnist_open_sample (const char * name, unsigned int k)
+{
+	mnist_dataset_handle h = mnist_open(name);
+	int imagecount = mnist_image_count(h);
+	unsigned int width, height;
+   	mnist_image_size (h, &width, &height);
+
+	mnist_image_handle curr = mnist_image_begin(h);
+
+	mnist_dataset_handle newh = mnist_create(width, height);
+	mnist_image_handle last = NULL;
+
+	int res[k];
+	
+	srand(time(NULL));
+
+	for (int i=0; i<k; ++i)
+	{
+		res[i] = rand() % imagecount;
+	}
+	
+	for (int i=0; i<imagecount; ++i)
+	{
+		for (int j=0; j<k; ++j)
+		{
+			if (res[j] == i)
+			{
+				unsigned char * imagedata = malloc((height*width*sizeof(unsigned char)));
+				memcpy(imagedata, curr->imagedata, (height*width*sizeof(unsigned char)));
+				mnist_image_handle next = mnist_image_add_after(newh, last, imagedata, width, height);
+				next->label = curr->label;
+				last = next;
+			}
+		}
+
+		curr = curr->next_image;
+	}
+
+	mnist_free(h);
+	return newh;
+	
 }
 
 mnist_image_handle mnist_image_begin (mnist_dataset_handle handle)
@@ -247,7 +289,7 @@ mnist_image_handle mnist_image_add_after (mnist_dataset_handle dataset, mnist_im
 
 	struct mnist_image_t mnist_image_t;
         mnist_image_handle imh = malloc(sizeof(mnist_image_t));
-	imh->imagedata = malloc((x * y * sizeof(unsigned char)));
+	imh->imagedata = (unsigned char*)imagedata;
 	imh->label = -1;
 	imh->next_image = NULL;
 
@@ -291,7 +333,6 @@ mnist_image_handle mnist_image_remove(mnist_dataset_handle dataset, mnist_image_
 		mnist_image_handle current = first;
 		for(int i =0; i<dataset->imagecount-1; ++i)
 		{
-			//prev = mnist_image_prev(current);
 			current = mnist_image_next(current);
                 	if (h == current)
                 	{
@@ -322,31 +363,46 @@ bool mnist_save(const_mnist_dataset_handle h, const char * filename)
 
 	char dsfilename[255];
         char lsfilename[255];
+	
+	//snprintf (dsfilename, sizeof(dsfilename)-1, "%s-%05u-data.pgm", filename, i);
+        //snprintf (lsfilename, sizeof(lsfilename)-1, "%s-%05u-label.pgm", filename, i);
   
 	mnist_image_handle img = h->start;
+
+	if (!img)
+        {
+        	fprintf (stderr, "Not enough images in dataset!\n");
+                return 1;
+        }
+
+        //FILE * f = fopen (dsfilename, "w");
+        //FILE * fl = fopen (lsfilename, "w");
+
+        //if (!f || !fl)
+        //{
+          //      perror ("Couldn't write to file: ");
+            //    return 1;
+        //}
+
    	for (unsigned int i=0; i<imagecount; ++i)
    	{
-      		if (!img)
-      		{
-         		fprintf (stderr, "Not enough images in dataset!\n");
-         		return 1;
-      		}
-
 		snprintf (dsfilename, sizeof(dsfilename)-1, "%s-%05u-data.pgm", filename, i);
-		snprintf (lsfilename, sizeof(lsfilename)-1, "%s-%05u-label.pgm", filename, i);
+        	snprintf (lsfilename, sizeof(lsfilename)-1, "%s-%05u-label.pgm", filename, i);
 
-      		FILE * f = fopen (filename, "w");
-		FILE * fl = fopen (filename, "w");
-      		if (!f || !fl)
-      		{
-         		perror ("Couldn't write to file: ");
-         		return 1;
-      		}
+		FILE * f = fopen (dsfilename, "w");
+        	FILE * fl = fopen (lsfilename, "w");
 
-      		printf ("Writing %s...\n", filename);
+        	if (!f || !fl)
+        	{
+                	perror ("Couldn't write to file: ");
+                	return 1;
+        	}
+
+      		printf ("Writing %s-%05u-data...\n", filename, i);
+		printf ("Writing %s-%05u-label...\n", filename, i);
 
       		fputs ("P2\n", f);
-      		fprintf (f, "# %s %u/%u\n", filename, i, imagecount);
+      		fprintf (f, "# %s %u\n", filename, i);
       		fprintf (f, "%u %u\n", width, height);
       		fputs ("255\n", f);
 
@@ -366,10 +422,11 @@ bool mnist_save(const_mnist_dataset_handle h, const char * filename)
 
 		fprintf(fl, "%d ", lbl);
 		fclose (fl);
-      		fclose (f);
-
+        	fclose (f);
       		img = mnist_image_next (img);
    	}
+	//fclose (fl);
+        //fclose (f);
 
    	exit(EXIT_SUCCESS);
 	

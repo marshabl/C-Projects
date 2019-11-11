@@ -78,6 +78,18 @@ static void test_image_funcs()
 	mnist_free(h);
 }
 
+static void test_open_sample()
+{
+	mnist_dataset_handle h = mnist_open_sample("train", 5);
+        const unsigned int imagecount = mnist_image_count (h);
+        unsigned int width, height;
+        mnist_image_size (h, &width, &height);
+
+	CU_ASSERT_EQUAL(width, 28);
+	CU_ASSERT_EQUAL(imagecount, 5);
+
+	mnist_free(h);
+}
 
 
 
@@ -107,7 +119,8 @@ int main()
    if (
        (NULL == CU_add_test(pSuite, "mnist_create", test_mnist_create)) ||
        (NULL == CU_add_test(pSuite, "mnist_open", test_mnist_open)) ||
-       (NULL == CU_add_test(pSuite, "mnist_image_funcs", test_image_funcs))
+       (NULL == CU_add_test(pSuite, "mnist_image_funcs", test_image_funcs)) ||
+       (NULL == CU_add_test(pSuite, "mnist_open_sample", test_open_sample))
     )
    {
       CU_cleanup_registry();
