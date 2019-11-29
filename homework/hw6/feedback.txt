@@ -1,0 +1,8 @@
+Commit Graded: 5581500c1b2bd0e1124e32527e61f92fda5b5349
+
+- Nice work getting board and agents to pass unit tests.
+- Entire board in a single row when playing game. It is confusing when
+playing the game. 
+- Implementation of mini-max algorithm not complete. Computer_agent does
+indeed play randomly, as mentioned in the README. 
+- Good README with useful information. This is always appreciated.
