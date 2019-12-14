@@ -39,7 +39,52 @@
  * The output should be written to the screen (stdout).
  * Any parser errors should be written to stderr.
  */
+bool varFunc(void * userdata, unsigned int line, const char * varname, const char * value)
+{ 
+	fprintf(stdout, "%s=%s\n", varname, value);
+	return true;
+}
 
+bool ruleFunc(void * userdata, const char ** target, unsigned int tcount, const char ** dependencies, unsigned int dcount, const char ** recipe, unsigned int rcount)
+{
+        for(int i=0; i<tcount; ++i)
+        {
+                if (i==0)
+                {
+                        fprintf(stdout, "%s", target[i]);
+                }
+                else
+                {
+                        fprintf(stdout, " %s", target[i]);
+                }
+		free((char*)target[i]);
+        }
+        fprintf(stdout, ":");
+        if (dependencies!=NULL)
+        {
+                for(int i=0; i<dcount; ++i)
+                {
+                        fprintf(stdout, " %s", dependencies[i]);
+			free((char*)dependencies[i]);
+                }
+                fprintf(stdout, "\n");
+
+                if (recipe!=NULL)
+                {
+                        for(int i=0; i<rcount; ++i)
+        	        {
+                        	fprintf(stdout, "\t%s\n", recipe[i]);
+				free((char*)recipe[i]);
+                	}
+                }
+        }
+	fprintf(stdout, "\n");
+	
+	free(target);
+	free(dependencies);
+	free(recipe);
+	return true;
+}
 
 int main(int argc, char ** args)
 {
@@ -57,53 +102,14 @@ int main(int argc, char ** args)
                 exit(EXIT_FAILURE);
         }
 
+	FILE * error = fopen("parse_errors.txt", "w");
         mfp_cb_t * mycb = malloc(sizeof(*mycb));
-        void * data;
-	
-	bool varFunc(void * userdata, unsigned int line, const char * varname, const char * value)
-	{
-		fprintf(stdout, "%s=%s\n", varname, value);
-	}
-
-	bool ruleFunc(void * userdata, const char ** target, unsigned int tcount, const char ** dependencies, unsigned int dcount, const char ** recipe, unsigned int rcount)
-	{
-		if (*(int*)userdata != 2)
-			fprintf(stdout, "\n")**(int*)userdata;
-		for(int i=0; i<tcount; ++i)
-		{
-			if (i==0)
-			{
-				fprintf(stdout, "%s", target[i]);
-			}
-			else
-			{
-				fprintf(stdout, " %s", target[i]);
-			}
-		}
-		fprintf(stdout, ":");
-		if (dependencies!=NULL)
-		{
-			for(int i=0; i<dcount; ++i)
-			{
-                                	fprintf(stdout, " %s", dependencies[i]);
-			}
-			fprintf(stdout, "\n");
-		
-			if (recipe!=NULL)
-			{
-				for(int i=0; i<rcount; ++i)
-                		{
-					fprintf(stdout, "\t%s\n", recipe[i]);
-				}
-			}
-		}
-		if (*(int*)userdata == 2)
-                	fprintf(stdout, "\n")**(int*)userdata;
-	}
-
-	mycb->variable_cb = varFunc;
+	//mycb->variable_cb = varFunc;
 	mycb->rule_cb = ruleFunc;
+	mycb->error = error;
 
-        mfp_parse(f, mycb, data);
+        mfp_parse(f, mycb, NULL);
+	fclose(f);
+	fclose(error);
 	free(mycb);
 }

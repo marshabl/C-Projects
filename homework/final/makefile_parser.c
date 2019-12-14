@@ -1,107 +1,26 @@
 #include "makefile_parser.h"
+#include "varstring.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-void prepFileForParse(FILE * inputFile, FILE * outputFile)
-{       
-        int firstChar = 0;
-        char c;
-        
-        while ((c=fgetc(inputFile))!=EOF)
-        {       
-                if(c=='\n' && firstChar==0)
-                {       
-                        firstChar=1;
-                        fputc(c, outputFile);
-                        continue;
-                }
-                else if(firstChar==1)
-                {       
-                        if (c=='\n' || c==' ')
-                        {       
-                                while((c=fgetc(inputFile))!=EOF && c=='\n')
-                                {       
-                                        continue;
-                                }
-                        }
-                        else
-                        {
-                                firstChar=0;
-                                fputc(c, outputFile);
-                                continue;
-                        }
-                }
-                if (c=='#')
-                {
-                        while((c=fgetc(inputFile))!=EOF && c!='\n')
-                        {
-                                continue;
-                        }
-                        if (firstChar==1)
-                        {
-                                firstChar=0;
-                                continue;
-                        }
-                }
-                fputc(c, outputFile);
-        }
-}
-
-char * mystrdup (const char * s)
-{
-   char * n = (char *) malloc (strlen(s)+1);
-   strcpy (n, s);
-   return n;
-}
-
-char * newArray()
-{
-        char * newArray = malloc(sizeof(1));
-        *newArray = '\0';
-        return newArray;
-}
-
-char * append_char(char * str, char c)
-{
-        unsigned int len = strlen(str);
-        str = realloc(str, sizeof(*str)*(len+2));
-        str[len] = c;
-        str[len+1] = '\0';
-        return str;
-}
-
-char ** add_word(char ** array, unsigned int * wordcount, const char * word_to_add)
-{
-        char * copyword = mystrdup(word_to_add);
-        char **newarray = realloc(array, sizeof(*newarray)*(*wordcount+1));
-        newarray[*wordcount] = copyword;
-        return newarray;
-}
-
-const char ** copy_array(char ** oldarray, unsigned int wordcount)
-{
-	const char ** newarray = malloc(sizeof(*oldarray)*(wordcount));
-        for (int h=0; h<wordcount; ++h)
-        {
-        	newarray[h] = oldarray[h];
-        }
-	return newarray;
-}
-
-void free_word_array(char ** array, unsigned int wordcount)
-{
-        for (unsigned int i=0; i<wordcount; ++i)
-        {
-                free(array[i]);
-        }
-        free(array);
-}
-
 char * load_stage(char * stage, char *c, FILE * f)
 {
+	unsigned int inComment = 0;
         while((*c=fgetc(f))!=EOF && *c!='\n')
+	{
+		if (*c=='#')
+                {
+			inComment=1;
+			continue;
+                }
+		else if (inComment == 1)
+		{
+			continue;
+		}
                 stage = append_char(stage, *c);
+		inComment =0;
+	}
         return stage;
 }
 
@@ -112,7 +31,7 @@ char * resetStage(char * stage)
         return stage;
 }
 
-char ** getMult(char ** array, char * str, int * i, int * count)
+char ** getMult(char ** array, char * str, unsigned int * i, unsigned int * count)
 {       
         unsigned int len = strlen(str);
         char * nstr = newArray();
@@ -156,10 +75,21 @@ void skipBlankLines(FILE*f, char * c)
 char ** getRecipe(FILE*f, char * c, unsigned int * wordcount, char ** recipe)
 {       
         char * str = newArray();
+	unsigned int inComment = 0;
         
         while((*c=fgetc(f))!=EOF && *c!='\n')
-        {       
+        {
+		if (*c=='#')
+                {
+                        inComment=1;
+                        continue;
+                }
+                else if (inComment == 1)
+                {
+                        continue;
+                }       
                 str = append_char(str, *c);
+		inComment =0;
         }
         
         if (wordcount==0)
@@ -249,68 +179,76 @@ bool checkTarDep(char * tarDep)
 
 }
 
-char ** getTarOrDep(char * str, int * wordcount)
+char ** getTarOrDep(char * str, unsigned int * wordcount)
 {
 	char ** tarOrDep = malloc(sizeof(*tarOrDep));
-        int i = 0;
+        unsigned int i = 0;
         tarOrDep = getMult(tarOrDep, str, &i, wordcount);
 	return tarOrDep;
 }
 
-
+void skipComments(FILE * f, char * c)
+{
+	while((*c=fgetc(f))!='\n')
+        {       
+                continue;
+        }
+        *c=fgetc(f);
+        if(*c=='#')
+        {       
+                skipComments(f, c);
+        }
+	else
+	{
+		ungetc(*c, f);
+	}
+}
 
 bool mfp_parse(FILE * f, const mfp_cb_t * cb, void * extradata)
 {
-        FILE *nf = fopen("stageFile.txt", "w");
-        if(nf==NULL)
-        {
-                exit(EXIT_FAILURE);
-        }
-
-        prepFileForParse(f, nf);
-        fclose(f);
-        fclose(nf);
-
-        FILE *b = fopen("stageFile.txt", "r");
-        if(nf==NULL)
-        {
-                exit(EXIT_FAILURE);
-        }
-
         char c;
         char *stage = newArray();
         char ** identifiers = malloc(sizeof(*identifiers));
         char ** values = malloc(sizeof(*values));
-        int idWordCount = 0;
-        int valuesWordCount = 0;
+        unsigned int idWordCount = 0;
+        unsigned int valuesWordCount = 0;
         int lineNumber = 0;
-	int firstLine = 0;
 
-        while ((c=fgetc(b))!=EOF)
+        while ((c=fgetc(f))!=EOF)
         {
-                if (c=='=')
+		if (c=='#')
                 {
-			if (firstLine==0)
-				firstLine=1;
+			skipComments(f, &c);
+			continue;
+		}
+		else if (c=='\n')
+		{
+			continue;
+		}
+                else if (c=='=')
+                {
                         //grab next id and check if its legal
                         identifiers = add_word(identifiers, &idWordCount, stage);
                         if(checkIds(identifiers[idWordCount])==0)
                         {
+				fprintf(cb->error, "Invalid identifier.");
                                 return false;
                         }
 
                         //reset stage string, then load it and add it to values
                         stage = resetStage(stage);
-                        stage = load_stage(stage, &c, b);
+                        stage = load_stage(stage, &c, f);
                         values = add_word(values, &valuesWordCount, stage);
 
+			//FIXME
                         //call mfp_variable_cb_t
-                        mfp_variable_cb_t v = cb->variable_cb;
-			v(extradata, lineNumber, identifiers[idWordCount], values[valuesWordCount]);
-                        if(v==0)
-                        {
-                                return false;
-                        }
+                        //mfp_variable_cb_t v = cb->variable_cb;
+			//v(extradata, lineNumber, identifiers[idWordCount], values[valuesWordCount]);
+                        //if(v==0)
+                        //{
+			//	fprintf(cb->error, "Variable call back failed.");
+                        //        return false;
+                       // }
 			++lineNumber;
 			++idWordCount;
 			++valuesWordCount;
@@ -321,37 +259,41 @@ bool mfp_parse(FILE * f, const mfp_cb_t * cb, void * extradata)
                 }
 		else if (c==':')
                 {
-			if (firstLine==0)
-                                firstLine=2;
-			int targetWordCount = 0;
+			unsigned int targetWordCount = 0;
 			char ** target = getTarOrDep(stage, &targetWordCount);
 			
 			for (int b=0; b<targetWordCount; ++b)
         		{       
                 		bool t = checkTarDep(target[b]);
                 		if (!t)  
+				{
+					fprintf(cb->error, "Invalid target");
                         		return false;
+				}
         		}
 
                         //reset stage for dependencies
                         stage = resetStage(stage);
-                        stage = load_stage(stage, &c, b);
+                        stage = load_stage(stage, &c, f);
 
-			int depWordCount = 0;
+			unsigned int depWordCount = 0;
 			char ** dependencies = getTarOrDep(stage, &depWordCount);
 			for (int b=0; b<depWordCount; ++b)
                         {
                                 bool t = checkTarDep(dependencies[b]);
                                 if (!t)
+				{
+					fprintf(cb->error, "Invalid dependency");
                                         return false;
+				}
                         }
 
 			char ** recipe = malloc(sizeof(*recipe));
-			int recWordCount = 0;
+			unsigned int recWordCount = 0;
 			++lineNumber;
-			if ((c=fgetc(b))!=EOF && c=='\t')
+			if ((c=fgetc(f))!=EOF && c=='\t')
 			{
-				recipe = getRecipe(b, &c, &recWordCount, recipe);
+				recipe = getRecipe(f, &c, &recWordCount, recipe);
 				for (int i=0; i<recWordCount; ++i)
 				{
 					++lineNumber;
@@ -359,30 +301,20 @@ bool mfp_parse(FILE * f, const mfp_cb_t * cb, void * extradata)
 			}
 			else
 			{
-				ungetc(c, b);
+				ungetc(c, f);
 			}
 	
-			const char ** newt = copy_array(target, targetWordCount);
-			const char ** newd = copy_array(dependencies, depWordCount);
-			const char ** newr = copy_array(recipe, recWordCount);
-			
 			mfp_rule_cb_t r = cb->rule_cb;
-			extradata = (void *)&firstLine;
-                        r(extradata, newt, targetWordCount, newd, depWordCount, newr, recWordCount);
+                        r(extradata, (const char**)target, targetWordCount, (const char**)dependencies, depWordCount, (const char**)recipe, recWordCount);
                         if(r==0)
                         {
+				fprintf(cb->error, "Rule call back failed.");
                                 return false;
                         }
 			
                         //reset stage and continue the loop
                         stage = resetStage(stage);
 			
-			free_word_array(dependencies, depWordCount);
-			free_word_array(target, targetWordCount);
-			free_word_array(recipe, recWordCount);
-			free((char**)newt);
-			free((char**)newr);
-			free((char**)newd);
                         continue;
                 }
                 else
@@ -395,7 +327,6 @@ bool mfp_parse(FILE * f, const mfp_cb_t * cb, void * extradata)
         free_word_array(identifiers, idWordCount);
         free_word_array(values, valuesWordCount);
         free(stage);
-        fclose(b);
         return true;
 }
 
