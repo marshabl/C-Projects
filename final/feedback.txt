@@ -1,0 +1,216 @@
+Git Commit: 0526c92bb5c2afb793f940042cbdc21841a2f233
+
+makefile_parser
+
+2 of the novar-nomt tests don't finish running:
+
+**input 1**
+
+recip1 : dep1    dep2
+	command1  qrg21
+
+	command2  arg1
+
+      
+	command3 last command1
+
+recip2: dep1 dep2
+	command1  qrg21
+
+recip3 : lowkey made it
+
+	celebrate all night
+
+
+**input 2**
+
+# This is a comment
+
+a: b c d  # @#@#@ should be ignored
+	test
+
+Looks like mt is implemented but some issues with variables defined i.e. the following produces no output
+
+***input 3***       
+DEPS=one two
+TARGET=two
+three: ${DEPS}
+	cat one two  > three
+	echo " 3 " >> three
+
+one: two
+	echo " 1 " > one
+
+${TARGET}:
+	echo " 2 " > two
+
+
+
+
+clean:
+	rm one two three
+
+
+
+digraph:
+
+Some failures/seg faults
+
+     CUnit - A unit testing framework for C - Version 2.1-3
+     http://cunit.sourceforge.net/
+
+
+Suite: Suite_1
+  Test: create/destroy ...passed
+  Test: create/destroy with cb ...passed
+  Test: create/destroy with cb + node ...passed
+  Test: create/destroy without cb + node ...passed
+  Test: node get userdata ...passed
+  Test: node set userdata ...FAILED
+    1. digraph_test.c:99  - CU_ASSERT_EQUAL(digraph_node_set_data(t, n, data2),data)
+  Test: node visit all ...passed
+  Test: node visit ...passed
+  Test: node find_notfound ...passed
+  Test: node find_found ...passed
+  Test: node find_empty ...passed
+  Test: node outgoing link count ...passed
+  Test: node incoming link count ...FAILED
+    1. digraph_test.c:319  - CU_ASSERT_EQUAL(digraph_node_incoming_link_count(t, nodes[i]),expected[i])
+    2. digraph_test.c:319  - CU_ASSERT_EQUAL(digraph_node_incoming_link_count(t, nodes[i]),expected[i])
+    3. digraph_test.c:319  - CU_ASSERT_EQUAL(digraph_node_incoming_link_count(t, nodes[i]),expected[i])
+    4. digraph_test.c:319  - CU_ASSERT_EQUAL(digraph_node_incoming_link_count(t, nodes[i]),expected[i])
+    5. digraph_test.c:319  - CU_ASSERT_EQUAL(digraph_node_incoming_link_count(t, nodes[i]),expected[i])
+    6. digraph_test.c:319  - CU_ASSERT_EQUAL(digraph_node_incoming_link_count(t, nodes[i]),expected[i])
+  Test: node get_link ..Segmentation fault.
+
+
+==9034== Invalid read of size 8
+==9034==    at 0x40249D: digraph_node_get_link (digraph.c:128)
+==9034==    by 0x401E18: test_get_link (in /home/sramirez266/c_grading/marshabl12/final/a.out)
+==9034==    by 0x4E3DD36: ??? (in /usr/lib/x86_64-linux-gnu/libcunit.so.1.0.1)
+==9034==    by 0x4E3E06F: ??? (in /usr/lib/x86_64-linux-gnu/libcunit.so.1.0.1)
+==9034==    by 0x4E3E3BD: CU_run_all_tests (in /usr/lib/x86_64-linux-gnu/libcunit.so.1.0.1)
+==9034==    by 0x4020A5: main (in /home/sramirez266/c_grading/marshabl12/final/a.out)
+==9034==  Address 0x63fc528 is 0 bytes after a block of size 8 alloc'd
+==9034==    at 0x4C2DB8F: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==9034==    by 0x4C2FDEF: realloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==9034==    by 0x402166: digraph_add_link (digraph.c:42)
+==9034==    by 0x40185D: create_example_graph (in /home/sramirez266/c_grading/marshabl12/final/a.out)
+==9034==    by 0x401C5F: test_get_link (in /home/sramirez266/c_grading/marshabl12/final/a.out)
+==9034==    by 0x4E3DD36: ??? (in /usr/lib/x86_64-linux-gnu/libcunit.so.1.0.1)
+==9034==    by 0x4E3E06F: ??? (in /usr/lib/x86_64-linux-gnu/libcunit.so.1.0.1)
+==9034==    by 0x4E3E3BD: CU_run_all_tests (in /usr/lib/x86_64-linux-gnu/libcunit.so.1.0.1)
+==9034==    by 0x4020A5: main (in /home/sramirez266/c_grading/marshabl12/final/a.out)
+
+commenting out and rerunning...
+
+     CUnit - A unit testing framework for C - Version 2.1-3
+     http://cunit.sourceforge.net/
+
+
+Suite: Suite_1
+  Test: create/destroy ...passed
+  Test: create/destroy with cb ...passed
+  Test: create/destroy with cb + node ...passed
+  Test: create/destroy without cb + node ...passed
+  Test: node get userdata ...passed
+  Test: node set userdata ...FAILED
+    1. digraph_test.c:99  - CU_ASSERT_EQUAL(digraph_node_set_data(t, n, data2),data)
+  Test: node visit all ...passed
+  Test: node visit ...passed
+  Test: node find_notfound ...passed
+  Test: node find_found ...passed
+  Test: node find_empty ...passed
+  Test: node outgoing link count ...passed
+  Test: node incoming link count ...FAILED
+    1. digraph_test.c:319  - CU_ASSERT_EQUAL(digraph_node_incoming_link_count(t, nodes[i]),expected[i])
+    2. digraph_test.c:319  - CU_ASSERT_EQUAL(digraph_node_incoming_link_count(t, nodes[i]),expected[i])
+    3. digraph_test.c:319  - CU_ASSERT_EQUAL(digraph_node_incoming_link_count(t, nodes[i]),expected[i])
+    4. digraph_test.c:319  - CU_ASSERT_EQUAL(digraph_node_incoming_link_count(t, nodes[i]),expected[i])
+    5. digraph_test.c:319  - CU_ASSERT_EQUAL(digraph_node_incoming_link_count(t, nodes[i]),expected[i])
+    6. digraph_test.c:319  - CU_ASSERT_EQUAL(digraph_node_incoming_link_count(t, nodes[i]),expected[i])
+  Test: node visit link ...passed
+
+Run Summary:    Type  Total    Ran Passed Failed Inactive
+              suites      1      1    n/a      0        0
+               tests     14     14     12      2        0
+             asserts   8568   8568   8561      7      n/a
+
+
+mymake_main:
+Should default to Makefile.mymake if -f is not passed
+Should call mymake_build with NULL target name if no target giveon on commandline
+
+Overall:
+If no target passed in, default is not always ran.
+Dependency targets are not properly executed,i.e. the following input won't
+execute three unless one and two are present
+
+**input**
+three: one two
+	cat one two  > three
+	echo " 3 " >> three
+
+one: two
+	echo " 1 " > one
+
+two:
+	echo " 2 " > two
+
+clean:
+	rm one two three
+
+
+Some memory leaks when running mymake
+
+valgrind ./mymake -f simple.mymake
+==9335== Memcheck, a memory error detector
+==9335== Copyright (C) 2002-2015, and GNU GPL'd, by Julian Seward et al.
+==9335== Using Valgrind-3.11.0 and LibVEX; rerun with -h for copyright info
+==9335== Command: ./mymake -f simple.mymake
+==9335==
+==9335==
+==9335== HEAP SUMMARY:
+==9335==     in use at exit: 144 bytes in 19 blocks
+==9335==   total heap usage: 234 allocs, 215 frees, 19,036 bytes allocated
+==9335==
+==9335== LEAK SUMMARY:
+==9335==    definitely lost: 112 bytes in 12 blocks
+==9335==    indirectly lost: 32 bytes in 7 blocks
+==9335==      possibly lost: 0 bytes in 0 blocks
+==9335==    still reachable: 0 bytes in 0 blocks
+==9335==         suppressed: 0 bytes in 0 blocks
+==9335== Rerun with --leak-check=full to see details of leaked memory
+==9335==
+==9335== For counts of detected and suppressed errors, rerun with: -v
+==9335== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+
+built in vars and uservars don't seem to be fully implemented in mymake, i.e.
+
+**input file**
+
+DEPS=one two
+TARGET=two
+three: ${DEPS}
+	cat one two  > three
+	echo " 3 " >> three
+
+one: two
+	echo " 1 " > one
+
+${TARGET}:
+	echo " 2 " > two
+
+
+
+
+clean:
+	rm one two three
+
+**output**
+Invalid dependency
+
+
+
+Overall good job!
+
